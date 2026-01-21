@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚁 Drone Gossipsub Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .connection-status.connected {
+            border-left: 4px solid #28a745;
+        }
+
+        .connection-status.disconnected {
+            border-left: 4px solid #dc3545;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        .messages-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .peers-section, .profile-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #4a5568;
+        }
+
+        .messages-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 3px solid #4299e1;
+        }
+
+        .message.own {
+            background: #ebf8ff;
+            border-left-color: #3182ce;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .message-author {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .message-content {
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        .message-location {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .message-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .send-button {
+            padding: 12px 24px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .send-button:hover {
+            background: #3182ce;
+        }
+
+        .peers-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .peer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .peer-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+        .peer-info {
+            flex: 1;
+        }
+
+        .peer-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .peer-type {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .profile-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-input {
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .save-button {
+            padding: 10px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .network-info {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .info-value {
+            color: #718096;
+        }
+
+        .drone-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f0fff4;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .drone-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: -1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚁 Drone Gossipsub Network</h1>
+            <div class="connection-status disconnected" id="connection-status">
+                <span id="connection-indicator">🔴</span>
+                <span id="connection-text">Connecting to Gossip Network...</span>
+            </div>
+            <div class="drone-status">
+                <div class="drone-indicator"></div>
+                <span>Drone Supernode Active</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="messages-section">
+                <h2 class="section-title">📨 Network Messages</h2>
+                <div class="messages-container" id="messages-container">
+                    <!-- Messages will be loaded here -->
+                </div>
+                <div class="message-input-container">
+                    <input type="text" class="message-input" id="message-input" placeholder="Type your message..." />
+                    <button class="send-button" id="send-button">Send</button>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="peers-section">
+                    <h3 class="section-title">👥 Network Peers</h3>
+                    <div class="peers-list" id="peers-list">
+                        <!-- Peers will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h3 class="section-title">👤 Your Profile</h3>
+                    <div class="profile-form">
+                        <input type="text" class="form-input" id="name-input" placeholder="Your Name" />
+                        <input type="text" class="form-input" id="device-type" placeholder="Device Type" readonly />
+                        <button class="save-button" id="save-profile">Save Profile</button>
+                    </div>
+                </div>
+
+                <div class="network-info">
+                    <h3 class="section-title">📊 Network Info</h3>
+                    <div class="info-item">
+                        <span class="info-label">Node ID:</span>
+                        <span class="info-value" id="node-id">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Messages:</span>
+                        <span class="info-value" id="message-count">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Peers:</span>
+                        <span class="info-value" id="peer-count">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Location:</span>
+                        <span class="info-value" id="location-info">Getting...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="libp2p-client.js"></script>
+    <script>
+        // Simple app interface for gossip client
+        class GossipApp {
+            constructor() {
+                this.messages = { public: [] };
+                this.users = new Map();
+                this.currentUser = {
+                    name: '',
+                    type: ''
+                };
+                
+                this.initializeApp();
+            }
+            
+            initializeApp() {
+                // Setup event listeners
+                document.getElementById('send-button').addEventListener('click', () => this.sendMessage());
+                document.getElementById('message-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+                document.getElementById('save-profile').addEventListener('click', () => this.saveProfile());
+                
+                // Load profile
+                this.loadProfile();
+                
+                // Update UI periodically
+                setInterval(() => this.updateUI(), 2000);
+            }
+            
+            loadProfile() {
+                const saved = localStorage.getItem('gossipProfile');
+                if (saved) {
+                    const profile = JSON.parse(saved);
+                    this.currentUser = profile;
+                    document.getElementById('name-input').value = profile.name || '';
+                }
+                
+                // Set device type
+                if (window.gossipClient) {
+                    document.getElementById('device-type').value = window.gossipClient.getDeviceType();
+                }
+            }
+            
+            saveProfile() {
+                const name = document.getElementById('name-input').value.trim();
+                if (!name) {
+                    alert('Please enter your name');
+                    return;
+                }
+                
+                this.currentUser.name = name;
+                this.currentUser.type = window.gossipClient ? window.gossipClient.getDeviceType() : 'unknown';
+                
+                localStorage.setItem('gossipProfile', JSON.stringify(this.currentUser));
+                
+                // Update client
+                if (window.gossipClient) {
+                    // Profile is automatically gossiped
+                    console.log('👤 Profile saved and gossiped');
+                }
+            }
+            
+            sendMessage() {
+                const input = document.getElementById('message-input');
+                const content = input.value.trim();
+                
+                if (!content) return;
+                
+                if (window.gossipClient) {
+                    window.gossipClient.sendMessage(content, 'public');
+                    input.value = '';
+                } else {
+                    console.error('❌ Gossip client not ready');
+                }
+            }
+            
+            displayPublicMessages() {
+                const container = document.getElementById('messages-container');
+                container.innerHTML = '';
+                
+                this.messages.public.forEach(msg => {
+                    const messageEl = this.createMessageElement(msg);
+                    container.appendChild(messageEl);
+                });
+                
+                // Scroll to bottom
+                container.scrollTop = container.scrollHeight;
+            }
+            
+            createMessageElement(msg) {
+                const div = document.createElement('div');
+                div.className = 'message';
+                
+                const isOwn = msg.author === (window.gossipClient ? window.gossipClient.nodeId : '');
+                if (isOwn) div.classList.add('own');
+                
+                const time = new Date(msg.timestamp).toLocaleTimeString();
+                const location = msg.location ? `📍 ${msg.location.lat.toFixed(4)}, ${msg.location.lng.toFixed(4)}` : '';
+                
+                div.innerHTML = `
+                    <div class="message-header">
+                        <span class="message-author">${msg.author}</span>
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-content">${msg.content}</div>
+                    ${location ? `<div class="message-location">${location}</div>` : ''}
+                `;
+                
+                return div;
+            }
+            
+            updatePeersList() {
+                const container = document.getElementById('peers-list');
+                container.innerHTML = '';
+                
+                this.users.forEach((user, id) => {
+                    const peerEl = this.createPeerElement(user);
+                    container.appendChild(peerEl);
+                });
+            }
+            
+            createPeerElement(user) {
+                const div = document.createElement('div');
+                div.className = 'peer';
+                
+                div.innerHTML = `
+                    <div class="peer-status"></div>
+                    <div class="peer-info">
+                        <div class="peer-name">${user.name}</div>
+                        <div class="peer-type">${user.type || 'Unknown'}</div>
+                    </div>
+                `;
+                
+                return div;
+            }
+            
+            updateNetworkInfo() {
+                if (window.gossipClient) {
+                    const info = window.gossipClient.getNetworkInfo();
+                    
+                    document.getElementById('node-id').textContent = info.nodeId.substring(0, 20) + '...';
+                    document.getElementById('message-count').textContent = info.messages;
+                    document.getElementById('peer-count').textContent = info.peers;
+                    
+                    if (info.location) {
+                        document.getElementById('location-info').textContent = 
+                            `${info.location.lat.toFixed(4)}, ${info.location.lng.toFixed(4)}`;
+                    }
+                }
+            }
+            
+            updateUI() {
+                this.displayPublicMessages();
+                this.updatePeersList();
+                this.updateNetworkInfo();
+            }
+        }
+        
+        // Initialize app
+        window.app = new GossipApp();
+        
+        // Update connection status when gossip client is ready
+        setTimeout(() => {
+            if (window.gossipClient) {
+                window.gossipClient.updateConnectionStatus(window.gossipClient.isConnected);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
