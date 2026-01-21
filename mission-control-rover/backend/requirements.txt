@@ -1,0 +1,7 @@
+flask
+flask-cors
+flask-socketio
+eventlet
+requests
+websocket-client
+python-socketio
